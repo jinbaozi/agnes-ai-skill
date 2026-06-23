@@ -131,6 +131,72 @@ assert_file_contains "SKILL.md" "AGNES_API_KEY" "SKILL.md keeps API key guidance
 assert_file_contains "SKILL.md" "CLI-first" "SKILL.md keeps CLI-first principle"
 assert_file_contains "SKILL.md" "Installation" "SKILL.md keeps Installation section"
 
+# Progressive disclosure ordering: TL;DR appears before Preset Tables;
+# Preset Selection Rules appears before Preset Tables; Persisting Key
+# pointer appears before Execution Contract.
+assert_file_contains "SKILL.md" "TL;DR" "SKILL.md has TL;DR section"
+tl_line=$(grep -n "^## TL;DR" SKILL.md | head -1 | cut -d: -f1)
+sel_line=$(grep -n "^## Preset Selection Rules" SKILL.md | head -1 | cut -d: -f1)
+img_line=$(grep -n "^## Image Presets" SKILL.md | head -1 | cut -d: -f1)
+vid_line=$(grep -n "^## Video Presets" SKILL.md | head -1 | cut -d: -f1)
+persist_line=$(grep -n "^## Persisting The Key" SKILL.md | head -1 | cut -d: -f1)
+exec_line=$(grep -n "^## Execution Contract" SKILL.md | head -1 | cut -d: -f1)
+
+if [[ -n "$tl_line" && -n "$sel_line" && -n "$img_line" ]]; then
+    if (( tl_line < sel_line )) && (( sel_line < img_line )); then
+        pass "Ordering: TL;DR ($tl_line) < Selection Rules ($sel_line) < Image Presets ($img_line)"
+    else
+        fail "Ordering violated: TL;DR=$tl_line Selection=$sel_line ImagePresets=$img_line"
+    fi
+fi
+
+if [[ -n "$vid_line" && -n "$img_line" ]] && (( img_line < vid_line )); then
+    pass "Ordering: Image Presets ($img_line) < Video Presets ($vid_line)"
+fi
+
+if [[ -n "$persist_line" && -n "$exec_line" ]] && (( persist_line < exec_line )); then
+    pass "Ordering: Persisting Key pointer ($persist_line) < Execution Contract ($exec_line)"
+fi
+
+# Persisting Key section in SKILL.md must be short (pointer only)
+if [[ -n "$persist_line" ]]; then
+    next_section=$(awk -v start="$persist_line" 'NR>start && /^## / { print NR; exit }' SKILL.md)
+    if [[ -z "$next_section" ]]; then
+        next_section=$(wc -l < SKILL.md)
+    fi
+    persist_len=$((next_section - persist_line))
+    if (( persist_len <= 10 )); then
+        pass "Persisting Key section is a pointer (≤10 lines, actual $persist_len)"
+    else
+        fail "Persisting Key section too long (>$persist_len lines, should be ≤10)"
+    fi
+fi
+
+# Persisting Key deep-dive must live in docs/persisting-api-key.md
+assert_file_contains "docs/persisting-api-key.md" "AGNES_API_KEY_VALUE" "docs/persisting-api-key.md has shell snippet"
+
+# Prompt recipes deep-dive must live in docs/prompt-recipes.md
+if command grep -Fqi "text-to-video" docs/prompt-recipes.md; then
+    pass "docs/prompt-recipes.md has text-to-video recipe"
+else
+    fail "docs/prompt-recipes.md missing text-to-video recipe"
+fi
+if command grep -Fqi "image-to-video" docs/prompt-recipes.md; then
+    pass "docs/prompt-recipes.md has image-to-video recipe"
+else
+    fail "docs/prompt-recipes.md missing image-to-video recipe"
+fi
+if command grep -Fqi "keyframes" docs/prompt-recipes.md; then
+    pass "docs/prompt-recipes.md has keyframes recipe"
+else
+    fail "docs/prompt-recipes.md missing keyframes recipe"
+fi
+if command grep -Fqi "dense image" docs/prompt-recipes.md; then
+    pass "docs/prompt-recipes.md has dense image recipe"
+else
+    fail "docs/prompt-recipes.md missing dense image recipe"
+fi
+
 # ---------- Section 9.2: Engineering ----------
 section "9.2 Engineering acceptance"
 
@@ -139,6 +205,8 @@ assert_file_exists "README.zh-CN.md" "README.zh-CN.md present"
 assert_file_exists "docs/version-policy.md" "docs/version-policy.md present"
 assert_file_exists "docs/preset-design.md" "docs/preset-design.md present"
 assert_file_exists "docs/cli-flag-verification.md" "docs/cli-flag-verification.md present"
+assert_file_exists "docs/persisting-api-key.md" "docs/persisting-api-key.md present"
+assert_file_exists "docs/prompt-recipes.md" "docs/prompt-recipes.md present"
 assert_file_exists "examples/image-presets.md" "examples/image-presets.md present"
 assert_file_exists "examples/video-presets.md" "examples/video-presets.md present"
 

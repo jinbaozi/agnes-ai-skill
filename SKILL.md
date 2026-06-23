@@ -166,48 +166,13 @@ Then explain:
 
 Keep this onboarding short before moving into model-specific details.
 
-## Persisting The Key Permanently
+## Persisting The Key
 
-If the user explicitly gives you an Agnes key and wants it remembered, persist
-it for future terminal sessions instead of keeping it only in the current
-process.
-
-### Rules
-
-- Save it as `AGNES_API_KEY`
-- Detect the shell and write to the matching rc file:
-  - zsh -> `~/.zshrc`
-  - bash -> `~/.bashrc`
-  - fallback -> `~/.profile`
-- Update an existing `export AGNES_API_KEY=...` line if present
-- Otherwise append a new export line
-- Also export it in the current session immediately
-- Do not echo the full key back after saving
-- Tell the user which rc file you changed
-
-### Reliable Shell Snippet
-
-Use a non-interactive shell flow like this when saving a provided key:
-
-```bash
-AGNES_API_KEY_VALUE='USER_PROVIDED_KEY'
-shell_name="$(basename "${SHELL:-}")"
-case "$shell_name" in
-  zsh) rc_file="$HOME/.zshrc" ;;
-  bash) rc_file="$HOME/.bashrc" ;;
-  *) rc_file="$HOME/.profile" ;;
-esac
-
-touch "$rc_file"
-tmp_file="$(mktemp)"
-grep -v '^export AGNES_API_KEY=' "$rc_file" > "$tmp_file" || true
-printf '\nexport AGNES_API_KEY=%q\n' "$AGNES_API_KEY_VALUE" >> "$tmp_file"
-mv "$tmp_file" "$rc_file"
-export AGNES_API_KEY="$AGNES_API_KEY_VALUE"
-unset AGNES_API_KEY_VALUE
-```
-
-After saving, continue using `AGNES_API_KEY` for the current task.
+If the user explicitly asks to remember `AGNES_API_KEY` across sessions,
+follow the rules and shell snippet in
+[`docs/persisting-api-key.md`](./docs/persisting-api-key.md). The short
+version: detect the shell, write or update the matching rc file, also
+export in the current session, and never echo the full key back.
 
 ## Execution Contract
 
@@ -551,52 +516,26 @@ Use the CLI as the execution layer, but keep these Agnes-specific rules in mind:
 
 - Image 2.1 is the default for most new image work
 - Image 2.0 is useful for edit-heavy or multi-image composition work
-- For edits, explicitly separate:
-  - what should change
-  - what must stay fixed
-- For dense images, be explicit about:
-  - primary subject
-  - background environment
-  - important secondary details
-  - style and lighting
-  - composition constraints
+
+For detailed prompt recipes (dense image, edit, multi-image, product), see
+[`docs/prompt-recipes.md`](./docs/prompt-recipes.md).
 
 ## Video Guidance
 
 Use the CLI as the execution layer, but keep these Agnes-specific rules in mind:
 
-- the API is asynchronous
-- `num_frames` must be `<= 441`
-- `num_frames` must satisfy `8n + 1`
-- `frame_rate` supports `1-60`
+- the API is asynchronous — always create, capture `videoId`, then poll
+- for keyframes, use the dedicated CLI subcommand instead of inventing your
+  own payload shape
 - common safe example settings are:
   - `width: 1152`
   - `height: 768`
   - `num_frames: 121`
   - `frame_rate: 24`
-- for keyframes, use the dedicated CLI subcommand instead of inventing your
-  own payload shape
 
-For text-to-video prompts, describe:
-
-- subject
-- action
-- environment
-- camera movement
-- lighting
-- style
-
-For image-to-video prompts, describe:
-
-- what should move
-- what should stay stable
-- how subtle or dramatic the motion should be
-
-For keyframes and multi-image work, describe:
-
-- how the inputs relate
-- what continuity should remain stable
-- what transition feeling is desired
+Video parameter validation lives in `TL;DR — Decision Flow` and the preset
+tables above. For detailed prompt recipes (text-to-video, image-to-video,
+keyframes), see [`docs/prompt-recipes.md`](./docs/prompt-recipes.md).
 
 ## JSON Output
 
@@ -635,17 +574,49 @@ This makes it easier to:
 
 ## Compact Reference
 
-- Base URL: `https://apihub.agnes-ai.com/v1`
-- Text endpoint behind CLI: `/chat/completions`
-- Image endpoint behind CLI: `/images/generations`
-- Video create endpoint behind CLI: `/videos`
-- Video recommended poll endpoint behind CLI: `/agnesapi?video_id={video_id}`
-- Video legacy poll endpoint behind CLI: `/videos/{task_id}`
+One-screen cheat sheet for the agent. Use this when context is tight.
 
-- Text model: `agnes-2.0-flash`
-- Image model: `agnes-image-2.1-flash`
-- Image compatibility model: `agnes-image-2.0-flash`
-- Video model: `agnes-video-v2.0`
+### Models
+
+| Modality | Default | Compatibility | CLI subcommands |
+|---|---|---|---|
+| Text | `agnes-2.0-flash` | — | `text chat` |
+| Image | `agnes-image-2.1-flash` | `agnes-image-2.0-flash` | `image text2img`, `image img2img`, `image compose` |
+| Video | `agnes-video-v2.0` | — | `video text2video`, `video img2video`, `video multivideo`, `video keyframes`, `video poll` |
+
+### Preset IDs
+
+| Image | Video |
+|---|---|
+| `image.quick` | `video.quick_preview` |
+| `image.landscape` | `video.standard` |
+| `image.portrait` | `video.social` |
+| `image.product` | `video.cinematic` |
+| `image.edit_or_compose` | `video.image_to_video` |
+|  | `video.keyframes` |
+
+### Endpoints (behind the CLI)
+
+| Action | Endpoint |
+|---|---|
+| Base URL | `https://apihub.agnes-ai.com/v1` |
+| Text | `/chat/completions` |
+| Image | `/images/generations` |
+| Video create | `/videos` |
+| Video poll (recommended) | `/agnesapi?video_id={video_id}` |
+| Video poll (legacy) | `/videos/{task_id}` |
+
+### Video Validation
+
+- `num_frames = 8n + 1`, `num_frames <= 441`
+- `frame_rate` in `1..60`
+- Recommended safe values: `121` frames at `24` fps, `1152x768`
+
+### Environment
+
+- Required env var: `AGNES_API_KEY`
+- Auth check: `npx -y agnes-ai-cli@^0.1.0 auth check`
+- Install skill: `npx skills add jomeswang/agnes-ai-skill -g`
 
 ## Do Not
 
