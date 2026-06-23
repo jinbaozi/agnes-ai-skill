@@ -1,6 +1,6 @@
 ---
 name: agnes-ai-skill
-version: 1.2.2
+version: 1.3.0
 description: "Use when the user wants Agnes AI text, image, or video generation and should execute it through the agnes-ai-cli command line instead of hand-writing raw HTTP requests."
 tags:
   - agnes
@@ -647,6 +647,18 @@ comes up.
 
 ## Version History
 
+- `1.3.0`
+  - Added minimal preset-based generation guidance for Agnes Image and Video
+    workflows.
+  - Added stable image presets: `image.quick`, `image.landscape`,
+    `image.portrait`, `image.product`, and `image.edit_or_compose`.
+  - Added stable video presets: `video.quick_preview`, `video.standard`,
+    `video.social`, `video.cinematic`, `video.image_to_video`, and
+    `video.keyframes`.
+  - Added preset selection rules, prompt recipes, video parameter
+    validation, and local media privacy warnings.
+  - Added CLI flag verification workflow to avoid documenting unsupported
+    CLI parameters.
 - `1.2.2` - Added a linked Chinese README and Chinese quick-start onboarding
   guidance for agent responses.
 - `1.2.1` - Made `npx -y agnes-ai-cli@^0.1.0` the default copy-paste execution
