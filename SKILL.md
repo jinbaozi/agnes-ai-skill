@@ -257,6 +257,129 @@ Choose the smallest suitable Agnes model path:
     keyframes
   - current default when any `video` generate command runs without `--model`
 
+## Preset Strategy
+
+Before running Agnes image or video generation, choose a preset. A preset
+maps user intent to:
+
+- modality: image or video
+- model family
+- CLI subcommand
+- prompt recipe
+- optional parameter hints
+
+Do not treat preset hints as verified CLI flags. Before passing less common
+flags such as `--size`, `--width`, `--height`, `--num-frames`, or
+`--frame-rate`, verify support through the current CLI `--help` output or a
+smoke test.
+
+Preset selection order:
+
+1. If the user explicitly names a preset id, use that preset.
+2. If the user provides images, prefer image-input-aware presets.
+3. If the user intent is clear, choose a preset automatically.
+4. If the user only says "generate an image", default to `image.quick`.
+5. If the user only says "generate a video", default to `video.quick_preview`
+   unless they asked for high quality or a specific use case.
+6. If image inputs are present but the desired output is ambiguous, ask a
+   short clarifying question.
+
+## Image Presets
+
+Default text-to-image model: `agnes-image-2.1-flash`.
+
+Use `agnes-image-2.1-flash` for new text-to-image work, high-information-density
+visuals, and straightforward image-to-image work.
+
+Use `agnes-image-2.0-flash` when the user explicitly needs Image 2.0 behavior,
+edit-heavy workflows, multi-image composition, or seed-based reproducibility.
+
+Do not pass `response_format` as a generic top-level field. Only pass response
+format options when the current official docs and CLI path confirm the correct
+location and mode.
+
+| Preset | Use when | Model strategy | CLI mode |
+|---|---|---|---|
+| `image.quick` | quick draft, rough concept, generic image | Image 2.1 | `image text2img` |
+| `image.landscape` | PPT, banner, website hero, landscape poster | Image 2.1 | `image text2img` |
+| `image.portrait` | mobile poster, Xiaohongshu cover, vertical cover | Image 2.1 | `image text2img` |
+| `image.product` | product ad, ecommerce visual, commercial still | Image 2.1 | `image text2img` |
+| `image.edit_or_compose` | edit one image, preserve composition, or combine references | one image: Image 2.1 or 2.0; multiple images / heavy edit: prefer Image 2.0 | `image img2img` or `image compose` |
+
+## Video Presets
+
+Default video model: `agnes-video-v2.0`.
+
+Video generation is asynchronous. Always create the task, capture `videoId`,
+then poll for completion.
+
+Validate video settings before execution:
+
+- `num_frames <= 441`
+- `num_frames = 8n + 1`
+- `frame_rate` must be between `1` and `60`
+- prefer `24fps` unless the user asks otherwise
+
+Recommended `num_frames` values:
+
+`81, 121, 161, 241, 441`
+
+Do not pass frame or size flags unless the current CLI help confirms support.
+
+| Preset | Use when | Parameter hint | CLI mode |
+|---|---|---|---|
+| `video.quick_preview` | quick preview, smoke test, first draft | 81 frames, 24fps | `video text2video` |
+| `video.standard` | default horizontal video | 121 frames, 24fps | `video text2video` |
+| `video.social` | vertical social short, Xiaohongshu, Douyin, mobile video | 121 frames, 24fps, portrait orientation hint | `video text2video` or `video img2video` |
+| `video.cinematic` | cinematic ad, storyboard, narrative shot | 161 frames, 24fps | `video text2video` |
+| `video.image_to_video` | animate one image | 121 frames, 24fps, motion_intensity hint | `video img2video` |
+| `video.keyframes` | keyframe transition or multi-image guided video | 161 frames, 24fps, min 2 images | `video keyframes` or `video multivideo` |
+
+## Preset Selection Rules
+
+### Image
+
+Choose:
+
+- `image.quick` when the user asks for a generic image or quick draft.
+- `image.landscape` when the user mentions PPT, slides, website banner,
+  landscape poster, horizontal layout, or 16:9.
+- `image.portrait` when the user mentions Xiaohongshu, mobile poster, vertical
+  cover, portrait layout, or 9:16.
+- `image.product` when the user mentions product ad, ecommerce, commercial
+  still, product hero, or brand campaign.
+- `image.edit_or_compose` when the user provides one or more images and asks
+  to edit, preserve, transform, merge, combine, or use references.
+
+### Video
+
+Choose:
+
+- `video.quick_preview` when the user asks for a quick preview or just says
+  generate a video without details.
+- `video.standard` when the user asks for a normal video with no special
+  format.
+- `video.social` when the user mentions Xiaohongshu, Douyin, TikTok,
+  short-form, mobile, vertical, or social media.
+- `video.cinematic` when the user mentions cinematic, ad film, storyboard,
+  narrative, camera language, or commercial film.
+- `video.image_to_video` when the user provides one image and asks to animate
+  it.
+- `video.keyframes` when the user provides two or more images and asks for
+  keyframes, transition, morph, or storyboard continuity.
+
+## Local Media Privacy Warning
+
+The companion CLI may upload local media inputs to temporary public URLs
+when local image or video files are used.
+
+Before using local private files for `img2img`, `compose`, `img2video`,
+`multivideo`, or `keyframes`, warn the user that local media may be uploaded
+to temporary public hosts.
+
+Do not process confidential, proprietary, customer-owned, regulated, or
+personal media unless the user explicitly confirms it is safe to upload.
+
 ## CLI Command Map
 
 ### Auth
