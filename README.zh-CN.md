@@ -131,6 +131,44 @@ agnes --help
 - Image 2.0 更强调编辑、合成、响应字段和 OpenAI Images 风格兼容
 - Video 2.0 是任务式 API，包含生成模式、任务状态、结果轮询和帧数约束
 
+## 场景化配置 Presets
+
+这个 Skill 内置了一组轻量 preset。Preset 用来帮助 Agent 在执行前判断：
+
+- 该用图片还是视频
+- 该用哪个模型系列
+- 该用哪个 CLI 子命令
+- prompt 应该包含哪些关键要素
+
+Preset 不是绕过 CLI 校验的捷径。对于 `--size`、`--width`、`--height`、
+`--num-frames`、`--frame-rate` 等参数，Agent 必须先通过当前 CLI 的 `--help`
+或 smoke test 确认支持后再使用；详细状态记录在
+`docs/cli-flag-verification.md`。
+
+### 图片 Presets
+
+| Preset | 适用场景 |
+|---|---|
+| `image.quick` | 快速试稿、通用图片 |
+| `image.landscape` | PPT、网页 banner、横版海报 |
+| `image.portrait` | 小红书封面、手机海报、竖版视觉 |
+| `image.product` | 产品广告、电商图、商业主视觉 |
+| `image.edit_or_compose` | 单图编辑、多图参考合成 |
+
+### 视频 Presets
+
+| Preset | 适用场景 |
+|---|---|
+| `video.quick_preview` | 快速预览 |
+| `video.standard` | 标准视频 |
+| `video.social` | 竖版社媒短视频 |
+| `video.cinematic` | 电影感广告、分镜、叙事镜头 |
+| `video.image_to_video` | 让一张图动起来 |
+| `video.keyframes` | 两张或多张图做关键帧转场 |
+
+完整的选择规则、参数提示和本地媒体隐私风险说明都内联在 `SKILL.md` 的
+`Preset Strategy` 和 `Preset Selection Rules` 章节。
+
 ## 为什么选择 Agnes
 
 Agnes 最有价值的场景，是一个工作流需要同时用到三层能力：

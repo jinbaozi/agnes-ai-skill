@@ -155,6 +155,42 @@ The official docs also give each model fairly different best practices:
 - Video 2.0 is task-based and documents multiple generation modes, task states,
   result polling, and frame-count constraints
 
+## Preset-Based Generation
+
+This skill ships a small set of image and video presets. Presets help agents
+choose the right model family, CLI mode, and prompt recipe before execution,
+and they are documented in `SKILL.md` so the runtime stays self-contained.
+
+Presets are guidance, not a replacement for CLI verification. Before using
+less common CLI flags such as `--size`, `--width`, `--height`, `--num-frames`,
+or `--frame-rate`, agents should check the current CLI help output and the
+verification matrix in `docs/cli-flag-verification.md`.
+
+### Image Presets
+
+| Preset | Use when |
+|---|---|
+| `image.quick` | quick image draft or generic image |
+| `image.landscape` | slide visual, website banner, landscape poster |
+| `image.portrait` | mobile poster, Xiaohongshu cover, vertical visual |
+| `image.product` | product ad, ecommerce visual, commercial still |
+| `image.edit_or_compose` | edit one image or combine multiple references |
+
+### Video Presets
+
+| Preset | Use when |
+|---|---|
+| `video.quick_preview` | quick video preview |
+| `video.standard` | default video |
+| `video.social` | vertical social short video |
+| `video.cinematic` | cinematic ad or storyboard shot |
+| `video.image_to_video` | animate one input image |
+| `video.keyframes` | transition between two or more input images |
+
+For full selection rules, parameter hints, and the local media privacy
+warning, see `SKILL.md` -> `Preset Strategy` and `SKILL.md` -> `Preset
+Selection Rules`.
+
 ## Showcase
 
 The strongest outside prompt libraries all do the same three things well:
