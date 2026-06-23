@@ -1,7 +1,7 @@
 ---
 name: agnes-ai-skill
 version: 1.3.0
-description: "Use when the user wants Agnes AI text, image, or video generation and should execute it through the agnes-ai-cli command line instead of hand-writing raw HTTP requests."
+description: "Use when the user wants Agnes AI text, image, or video generation. Execute through `agnes-ai-cli`; do not hand-write raw HTTP requests."
 tags:
   - agnes
   - agnes-ai
@@ -77,6 +77,35 @@ Do not use this skill when:
 - the task does not need Agnes-specific models, auth, or request behavior
 - you would have to guess current Agnes behavior without running the CLI or
   checking the live docs
+
+## TL;DR — Decision Flow
+
+This skill is organised as progressive disclosure. The first three blocks
+below are usually enough to act:
+
+1. **Pick a preset.** If the user names a preset id, use it. Otherwise:
+   - generic image → `image.quick`
+   - PPT / banner / 16:9 → `image.landscape`
+   - mobile poster / 9:16 → `image.portrait`
+   - product ad / ecommerce → `image.product`
+   - edit or merge images → `image.edit_or_compose`
+   - generic video → `video.quick_preview`
+   - horizontal video → `video.standard`
+   - vertical social short → `video.social`
+   - cinematic / storyboard → `video.cinematic`
+   - one image to animate → `video.image_to_video`
+   - two or more guiding images → `video.keyframes`
+2. **Pick the CLI mode.** See `Preset Strategy` and `Preset Selection Rules`
+   below for the full decision logic and edge cases.
+3. **Validate video settings.** `num_frames = 8n + 1`, `num_frames <= 441`,
+   `frame_rate` in `1..60`, default `24fps`.
+
+Stop here for first-pass execution. Read deeper sections only when the
+default path is unclear, fails, or the user asks for an edge case.
+
+> **Minimum required reading for the first execution:** `When To Use`,
+> `TL;DR — Decision Flow`, `Execution Contract`, `Preset Selection Rules`,
+> `Local Media Privacy Warning`. Everything else is reference material.
 
 ## Source Of Truth
 
@@ -284,6 +313,43 @@ Preset selection order:
 6. If image inputs are present but the desired output is ambiguous, ask a
    short clarifying question.
 
+## Preset Selection Rules
+
+These rules are the source of truth for choosing a preset from a user
+request. Use them together with the preset tables below: the tables
+describe each preset, these rules describe how to match user intent.
+
+### Image
+
+Choose:
+
+- `image.quick` when the user asks for a generic image or quick draft.
+- `image.landscape` when the user mentions PPT, slides, website banner,
+  landscape poster, horizontal layout, or 16:9.
+- `image.portrait` when the user mentions Xiaohongshu, mobile poster, vertical
+  cover, portrait layout, or 9:16.
+- `image.product` when the user mentions product ad, ecommerce, commercial
+  still, product hero, or brand campaign.
+- `image.edit_or_compose` when the user provides one or more images and asks
+  to edit, preserve, transform, merge, combine, or use references.
+
+### Video
+
+Choose:
+
+- `video.quick_preview` when the user asks for a quick preview or just says
+  generate a video without details.
+- `video.standard` when the user asks for a normal video with no special
+  format.
+- `video.social` when the user mentions Xiaohongshu, Douyin, TikTok,
+  short-form, mobile, vertical, or social media.
+- `video.cinematic` when the user mentions cinematic, ad film, storyboard,
+  narrative, camera language, or commercial film.
+- `video.image_to_video` when the user provides one image and asks to animate
+  it.
+- `video.keyframes` when the user provides two or more images and asks for
+  keyframes, transition, morph, or storyboard continuity.
+
 ## Image Presets
 
 Default text-to-image model: `agnes-image-2.1-flash`.
@@ -334,39 +400,6 @@ Do not pass frame or size flags unless the current CLI help confirms support.
 | `video.cinematic` | cinematic ad, storyboard, narrative shot | 161 frames, 24fps | `video text2video` |
 | `video.image_to_video` | animate one image | 121 frames, 24fps, motion_intensity hint | `video img2video` |
 | `video.keyframes` | keyframe transition or multi-image guided video | 161 frames, 24fps, min 2 images | `video keyframes` or `video multivideo` |
-
-## Preset Selection Rules
-
-### Image
-
-Choose:
-
-- `image.quick` when the user asks for a generic image or quick draft.
-- `image.landscape` when the user mentions PPT, slides, website banner,
-  landscape poster, horizontal layout, or 16:9.
-- `image.portrait` when the user mentions Xiaohongshu, mobile poster, vertical
-  cover, portrait layout, or 9:16.
-- `image.product` when the user mentions product ad, ecommerce, commercial
-  still, product hero, or brand campaign.
-- `image.edit_or_compose` when the user provides one or more images and asks
-  to edit, preserve, transform, merge, combine, or use references.
-
-### Video
-
-Choose:
-
-- `video.quick_preview` when the user asks for a quick preview or just says
-  generate a video without details.
-- `video.standard` when the user asks for a normal video with no special
-  format.
-- `video.social` when the user mentions Xiaohongshu, Douyin, TikTok,
-  short-form, mobile, vertical, or social media.
-- `video.cinematic` when the user mentions cinematic, ad film, storyboard,
-  narrative, camera language, or commercial film.
-- `video.image_to_video` when the user provides one image and asks to animate
-  it.
-- `video.keyframes` when the user provides two or more images and asks for
-  keyframes, transition, morph, or storyboard continuity.
 
 ## Local Media Privacy Warning
 
