@@ -312,6 +312,50 @@ for example:
 - Claude Code: `~/.claude/skills/agnes-ai-skill`
 - Cursor: `~/.cursor/skills/agnes-ai-skill`
 
+## Distribution As A `.skill` Tarball
+
+This repository can be packaged into a self-contained `.skill` tarball
+that bundles `SKILL.md`, `docs/`, `examples/`, `configs/`, `scripts/`,
+`tests/`, the READMEs, the showcase assets, and `LICENSE`.
+
+### Build
+
+```bash
+# Full package (includes showcase videos)
+bash scripts/build-skill.sh
+
+# Light package (skips heavy showcase videos, ~12 MB instead of ~24 MB)
+bash scripts/build-skill.sh --light
+```
+
+The artifact lands at `dist/agnes-ai-skill-<version>.skill`, where
+`<version>` is read from the `SKILL.md` frontmatter. A matching
+`BUILD_INFO.txt` with the build date, host, and git commit is included.
+
+### Verify
+
+```bash
+bash scripts/verify-skill.sh dist/agnes-ai-skill-<version>.skill
+```
+
+The verifier extracts the tarball in a temp directory, checks every
+required file, validates the frontmatter, cross-checks
+`BUILD_INFO.txt`, and re-runs the packaged `tests/verify_presets.sh`
+and `tests/verify_e2e.sh`.
+
+### Install A Built Tarball
+
+After downloading a `.skill` file from a release, extract it into a
+skills location:
+
+```bash
+mkdir -p ~/.claude/skills
+tar -xzf agnes-ai-skill-1.3.0.skill -C ~/.claude/skills
+mv ~/.claude/skills/agnes-ai-skill ~/.claude/skills/agnes-ai-skill-1.3.0
+```
+
+Then restart the agent so it picks up the new skill metadata.
+
 ## What Agents Learn
 
 - How to detect missing Agnes auth before making live calls

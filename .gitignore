@@ -1,3 +1,6 @@
 .DS_Store
 .agents/
 skills-lock.json
+dist/
+*.skill
+node_modules/

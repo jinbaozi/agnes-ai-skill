@@ -206,3 +206,45 @@ cp SKILL.md ~/.codex/skills/agnes-ai-skill/SKILL.md
 ```
 
 然后在新会话中让 Agent 使用 `agnes-ai-skill`。
+
+## 打包成 `.skill` 发布
+
+仓库可以打包为自包含的 `.skill` 压缩包，里面包含 `SKILL.md`、`docs/`、
+`examples/`、`configs/`、`scripts/`、`tests/`、两个 README、showcase 资源
+和 `LICENSE`。
+
+### 构建
+
+```bash
+# 完整包（含展示视频）
+bash scripts/build-skill.sh
+
+# 精简包（跳过展示视频，约 12 MB 而非 24 MB）
+bash scripts/build-skill.sh --light
+```
+
+产物写入 `dist/agnes-ai-skill-<version>.skill`，`<version>` 从
+`SKILL.md` frontmatter 读取。包内还会包含 `BUILD_INFO.txt`，记录构建
+日期、主机和 git commit。
+
+### 校验
+
+```bash
+bash scripts/verify-skill.sh dist/agnes-ai-skill-<version>.skill
+```
+
+校验脚本会在临时目录解压、核对每个必备文件、验证 frontmatter、
+交叉对照 `BUILD_INFO.txt`，并再次运行包内的 `tests/verify_presets.sh`
+与 `tests/verify_e2e.sh`。
+
+### 安装已构建的 `.skill`
+
+下载 release 中的 `.skill` 文件后，解压到 skills 目录即可：
+
+```bash
+mkdir -p ~/.claude/skills
+tar -xzf agnes-ai-skill-1.3.0.skill -C ~/.claude/skills
+mv ~/.claude/skills/agnes-ai-skill ~/.claude/skills/agnes-ai-skill-1.3.0
+```
+
+然后重启 Agent 让它读取新的 skill 元数据。

@@ -15,6 +15,20 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT"
 
+# Suppress per-check PASS output if --quiet is passed; only print
+# failing checks and the summary. Useful when invoked from
+# scripts/verify-skill.sh where per-check lines add noise.
+QUIET=0
+for arg in "$@"; do
+    case "$arg" in
+        --quiet) QUIET=1 ;;
+    esac
+done
+
+if [[ "$QUIET" -eq 1 ]]; then
+    pass() { :; }
+fi
+
 PASS_COUNT=0
 FAIL_COUNT=0
 FAILURES=()
