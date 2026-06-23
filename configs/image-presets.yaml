@@ -1,0 +1,111 @@
+version: 1
+runtime_source_of_truth: SKILL.md
+notes:
+  - This file is a maintainable source for presets.
+  - The minimal executable rules must also be copied into SKILL.md.
+  - Do not assume agents will read this file automatically.
+
+models:
+  image_21:
+    id: agnes-image-2.1-flash
+    use_for:
+      - new text-to-image
+      - high-density visual
+      - straightforward image-to-image
+  image_20:
+    id: agnes-image-2.0-flash
+    use_for:
+      - edit-heavy workflow
+      - multi-image composition
+      - seed reproducibility
+      - documented img2img compatibility flow
+
+presets:
+  image.quick:
+    modality: image
+    mode: text2img
+    model_strategy: image_21
+    status: stable
+    size_policy:
+      type: auto
+      note: Do not pass --size unless CLI help confirms support.
+    prompt_recipe:
+      required:
+        - subject
+        - style
+        - lighting
+
+  image.landscape:
+    modality: image
+    mode: text2img
+    model_strategy: image_21
+    status: stable
+    orientation_hint: landscape
+    size_policy:
+      type: hint
+      preferred: 1024x768
+      requires_verification: true
+    prompt_recipe:
+      required:
+        - subject
+        - background
+        - style
+        - lighting
+        - landscape_composition
+
+  image.portrait:
+    modality: image
+    mode: text2img
+    model_strategy: image_21
+    status: stable
+    orientation_hint: portrait
+    size_policy:
+      type: hint
+      preferred: portrait_size
+      requires_verification: true
+    prompt_recipe:
+      required:
+        - subject
+        - mobile_first_composition
+        - style
+        - lighting
+
+  image.product:
+    modality: image
+    mode: text2img
+    model_strategy: image_21
+    status: stable
+    orientation_hint: flexible
+    size_policy:
+      type: auto
+      requires_verification: true
+    prompt_recipe:
+      required:
+        - product_subject
+        - material
+        - background
+        - lighting
+        - camera_angle
+        - commercial_composition
+
+  image.edit_or_compose:
+    modality: image
+    mode_selection:
+      one_image: img2img
+      multiple_images: compose
+    model_strategy:
+      one_image: image_21_or_20
+      multiple_images: image_20_preferred
+      heavy_edit: image_20_preferred
+    status: stable
+    input_requirements:
+      min_images: 1
+    response_format_policy:
+      text2img: do_not_pass_by_default
+      img2img: extra_body_only_when_confirmed
+      compose: extra_body_only_when_confirmed
+    prompt_recipe:
+      required:
+        - what_should_change
+        - what_must_remain_fixed
+        - final_style

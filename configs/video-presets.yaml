@@ -1,0 +1,158 @@
+version: 1
+runtime_source_of_truth: SKILL.md
+notes:
+  - This file is a maintainable source for presets.
+  - Do not assume agents will read this file automatically.
+  - CLI flags must be verified before being added to executable examples.
+
+model:
+  id: agnes-video-v2.0
+
+constraints:
+  num_frames:
+    max: 441
+    formula: 8n+1
+    recommended_values:
+      - 81
+      - 121
+      - 161
+      - 241
+      - 441
+  frame_rate:
+    min: 1
+    max: 60
+    recommended: 24
+
+presets:
+  video.quick_preview:
+    modality: video
+    mode: text2video
+    status: stable
+    defaults:
+      num_frames: 81
+      frame_rate: 24
+    cli_flags_require_verification:
+      - num_frames
+      - frame_rate
+      - width
+      - height
+    prompt_recipe:
+      required:
+        - subject
+        - action
+        - environment
+        - camera_movement
+
+  video.standard:
+    modality: video
+    mode: text2video
+    status: stable
+    defaults:
+      num_frames: 121
+      frame_rate: 24
+      width_hint: 1152
+      height_hint: 768
+    cli_flags_require_verification:
+      - num_frames
+      - frame_rate
+      - width
+      - height
+    prompt_recipe:
+      required:
+        - subject
+        - action
+        - environment
+        - camera_movement
+        - lighting
+        - style
+
+  video.social:
+    modality: video
+    mode: text2video_or_img2video
+    status: stable
+    orientation_hint: portrait
+    defaults:
+      num_frames: 121
+      frame_rate: 24
+    cli_flags_require_verification:
+      - num_frames
+      - frame_rate
+      - width
+      - height
+    prompt_recipe:
+      required:
+        - vertical_composition
+        - subject
+        - action
+        - platform_style
+
+  video.cinematic:
+    modality: video
+    mode: text2video
+    status: stable
+    defaults:
+      num_frames: 161
+      frame_rate: 24
+    cli_flags_require_verification:
+      - num_frames
+      - frame_rate
+      - width
+      - height
+    prompt_recipe:
+      required:
+        - subject
+        - action_progression
+        - environment
+        - camera_movement
+        - lighting
+        - cinematic_style
+
+  video.image_to_video:
+    modality: video
+    mode: img2video
+    status: stable
+    input_requirements:
+      min_images: 1
+    defaults:
+      num_frames: 121
+      frame_rate: 24
+      motion_intensity: subtle
+    overrides:
+      motion_intensity:
+        - subtle
+        - normal
+        - dynamic
+    cli_flags_require_verification:
+      - num_frames
+      - frame_rate
+      - width
+      - height
+    prompt_recipe:
+      required:
+        - what_should_move
+        - what_should_stay_stable
+        - motion_intensity
+        - camera_movement
+
+  video.keyframes:
+    modality: video
+    mode_selection:
+      explicit_keyframes: keyframes
+      multiple_guiding_images: multivideo
+    status: stable
+    input_requirements:
+      min_images: 2
+    defaults:
+      num_frames: 161
+      frame_rate: 24
+    cli_flags_require_verification:
+      - num_frames
+      - frame_rate
+      - width
+      - height
+    prompt_recipe:
+      required:
+        - role_of_each_image
+        - continuity
+        - transition_feeling
+        - stable_elements
